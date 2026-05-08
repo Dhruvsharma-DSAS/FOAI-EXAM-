@@ -4,11 +4,9 @@ const GNEWS_API_KEY = '2674754d281f5d9fbdba1116453ca4de';
 
 /** ISS position API — HTTPS compatible */
 export async function fetchISSPosition() {
-  // Use wheretheiss.at which supports HTTPS
   const res = await fetch('https://api.wheretheiss.at/v1/satellites/25544');
   if (!res.ok) throw new Error(`ISS API error: ${res.status}`);
   const data = await res.json();
-  // Map to same format as open-notify
   return {
     iss_position: {
       latitude: String(data.latitude),
@@ -21,12 +19,10 @@ export async function fetchISSPosition() {
 /** Astronauts API */
 export async function fetchAstronauts() {
   try {
-    // Try open-notify first (works on localhost, may fail on HTTPS deploy)
     const res = await fetch('http://api.open-notify.org/astros.json');
     if (!res.ok) throw new Error('Failed');
     return res.json();
   } catch {
-    // Fallback: use a known crew list so deployed version always shows data
     return {
       number: 12,
       people: [
@@ -63,9 +59,19 @@ export async function reverseGeocode(lat, lon) {
   }
 }
 
-/** GNews API — key hardcoded for reliable deployment */
+// Map category IDs to search queries
+const CATEGORY_QUERIES = {
+  'breaking-news': 'breaking news today',
+  'technology': 'technology',
+  'science': 'science',
+  'business': 'business',
+  'sports': 'sports',
+};
+
+/** GNews API — uses SEARCH endpoint (works on free plan) */
 export async function fetchNews(category) {
-  const url = `https://gnews.io/api/v4/top-headlines?topic=${category}&lang=en&max=10&apikey=${GNEWS_API_KEY}`;
+  const query = CATEGORY_QUERIES[category] || category;
+  const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=10&apikey=${GNEWS_API_KEY}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`GNews API error: ${res.status}`);
   return res.json();

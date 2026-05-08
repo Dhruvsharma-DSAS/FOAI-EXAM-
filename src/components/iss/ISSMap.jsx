@@ -1,8 +1,6 @@
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { motion } from 'framer-motion';
-import GlassCard from '../ui/GlassCard';
 import { useTheme } from '../../context/ThemeContext';
 import { useEffect } from 'react';
 
@@ -16,9 +14,10 @@ L.Icon.Default.mergeOptions({
 
 // Custom ISS Marker
 const issIcon = new L.Icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/2005/2005115.png', // Satellite icon
-  iconSize: [40, 40],
-  iconAnchor: [20, 20],
+  iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/International_Space_Station.svg/200px-International_Space_Station.svg.png',
+  iconSize: [48, 30],
+  iconAnchor: [24, 15],
+  popupAnchor: [0, -15],
 });
 
 function MapRecenter({ center }) {
@@ -33,47 +32,59 @@ function MapRecenter({ center }) {
 
 export default function ISSMap({ position, positions }) {
   const { theme } = useTheme();
-  const defaultCenter = position.lat ? [position.lat, position.lng] : [0, 0];
+  const center = position.lat ? [position.lat, position.lng] : [20, 0];
   
-  // Use a high-quality dark/light tile provider
   const tileUrl = theme === 'dark' 
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-
-  const attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
   return (
-    <GlassCard className="p-0 overflow-hidden h-[480px] lg:h-[600px] border border-[var(--border-strong)]">
-      <div className="absolute top-6 left-6 z-[1000] space-y-1">
+    <div 
+      className="relative rounded-3xl overflow-hidden border border-[var(--border-default)]"
+      style={{ height: '600px' }}
+    >
+      {/* Map Header Overlay */}
+      <div className="absolute top-5 left-5 z-[1000] space-y-1">
         <span className="eyebrow text-accent-500">REAL-TIME TRAJECTORY</span>
-        <h3 className="text-xl font-bold text-bright font-display">Live Ground Track</h3>
+        <h3 className="text-xl font-bold font-display" style={{ color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
+          Live Ground Track
+        </h3>
       </div>
 
-      <div className="absolute top-6 right-6 z-[1000] flex gap-2">
-        <div className="px-3 py-1.5 rounded-full bg-[var(--bg-deep)]/80 backdrop-blur-md border border-[var(--border-subtle)] flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-accent-500 animate-pulse" />
-          <span className="text-[10px] font-mono font-bold text-bright tracking-wider uppercase">
-            SYNC: {position.lat ? 'ACTIVE' : 'SEARCHING'}
+      {/* Sync Badge */}
+      <div className="absolute top-5 right-5 z-[1000]">
+        <div 
+          className="px-3 py-1.5 rounded-full flex items-center gap-2 border"
+          style={{ 
+            background: 'rgba(10, 13, 24, 0.85)', 
+            borderColor: 'rgba(99, 102, 241, 0.2)',
+            backdropFilter: 'blur(12px)' 
+          }}
+        >
+          <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+          <span className="text-[10px] font-mono font-bold text-white tracking-wider uppercase">
+            {position.lat ? 'TRACKING' : 'ACQUIRING'}
           </span>
         </div>
       </div>
 
+      {/* Leaflet Map — rendered directly, no GlassCard wrapper */}
       <MapContainer
-        center={defaultCenter}
+        center={center}
         zoom={3}
-        scrollWheelZoom={false}
-        className="w-full h-full grayscale-[0.2] brightness-[0.9]"
-        zoomControl={false}
+        scrollWheelZoom={true}
+        zoomControl={true}
+        style={{ width: '100%', height: '100%' }}
       >
-        <TileLayer url={tileUrl} attribution={attribution} />
+        <TileLayer 
+          url={tileUrl} 
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
+        />
         
         {positions.length > 1 && (
           <Polyline
             positions={positions.map(p => [p.lat, p.lng])}
-            color="var(--accent-500)"
-            weight={3}
-            opacity={0.6}
-            dashArray="10, 10"
+            pathOptions={{ color: '#6366f1', weight: 3, opacity: 0.7, dashArray: '8, 8' }}
           />
         )}
 
@@ -85,13 +96,26 @@ export default function ISSMap({ position, positions }) {
         )}
       </MapContainer>
 
-      {/* Map Coordinates Footer */}
-      <div className="absolute bottom-6 left-6 z-[1000]">
-        <div className="px-4 py-2 rounded-xl bg-[var(--bg-deep)]/80 backdrop-blur-md border border-[var(--border-subtle)] font-mono text-[11px] space-y-0.5">
-          <p className="text-muted"><span className="text-accent-500 mr-2">LAT:</span>{position.lat?.toFixed(4) || '0.0000'}</p>
-          <p className="text-muted"><span className="text-accent-500 mr-2">LNG:</span>{position.lng?.toFixed(4) || '0.0000'}</p>
+      {/* Coordinates Overlay */}
+      <div className="absolute bottom-5 left-5 z-[1000]">
+        <div 
+          className="px-4 py-3 rounded-xl font-mono text-[11px] space-y-1 border"
+          style={{ 
+            background: 'rgba(10, 13, 24, 0.85)', 
+            borderColor: 'rgba(99, 102, 241, 0.15)',
+            backdropFilter: 'blur(12px)' 
+          }}
+        >
+          <p style={{ color: '#94a3b8' }}>
+            <span style={{ color: '#6366f1' }} className="mr-2">LAT</span>
+            {position.lat?.toFixed(4) || '—'}
+          </p>
+          <p style={{ color: '#94a3b8' }}>
+            <span style={{ color: '#6366f1' }} className="mr-2">LNG</span>
+            {position.lng?.toFixed(4) || '—'}
+          </p>
         </div>
       </div>
-    </GlassCard>
+    </div>
   );
 }

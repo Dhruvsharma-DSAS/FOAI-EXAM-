@@ -84,7 +84,7 @@ body {
 
 /* Glassmorphism Effect */
 .glass-effect {
-  background: rgba(from var(--bg-deep) r g b / var(--glass-opacity)) !important;
+  background: var(--bg-deep);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--border-default);

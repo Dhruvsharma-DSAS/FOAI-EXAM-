@@ -1,0 +1,78 @@
+/* ============================================
+   LEAFLET MAP OVERRIDES
+   ============================================ */
+
+/* Hide attribution */
+.leaflet-control-attribution {
+  display: none !important;
+}
+
+/* Custom zoom controls */
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.leaflet-control-zoom a {
+  background: var(--bg-deep) !important;
+  color: var(--text-bright) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 8px !important;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  font-size: 14px !important;
+  margin-bottom: 4px !important;
+  backdrop-filter: blur(12px);
+  transition: all 0.2s ease;
+}
+
+.leaflet-control-zoom a:hover {
+  background: var(--bg-elevated) !important;
+  border-color: var(--border-default) !important;
+}
+
+/* ISS Marker Styles */
+.iss-marker {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iss-satellite {
+  position: relative;
+  z-index: 2;
+  animation: orbit 12s linear infinite;
+  filter: drop-shadow(0 0 8px var(--cyan-glow));
+}
+
+.iss-pulse-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.5);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--cyan-500);
+  animation: pulseRing 2.4s ease-out infinite;
+  z-index: 1;
+}
+
+.iss-pulse-ring.delay-1 {
+  animation-delay: 1.2s;
+}
+
+/* Map container border radius */
+.leaflet-container {
+  border-radius: 16px;
+  background: var(--bg-deep) !important;
+}
+
+/* Trajectory line */
+.leaflet-overlay-pane svg {
+  filter: drop-shadow(0 0 4px var(--cyan-glow));
+}

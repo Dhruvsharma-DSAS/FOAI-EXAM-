@@ -1,0 +1,203 @@
+@import "tailwindcss";
+
+/* ============================================
+   MISSION CONTROL — Design System
+   ============================================ */
+
+/* Reset & Base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   DARK THEME (Default — Deep Space)
+   ============================================ */
+[data-theme="dark"] {
+  --bg-void: #050714;
+  --bg-deep: #0A0E1F;
+  --bg-surface: #111530;
+  --bg-elevated: #1A1F3A;
+
+  --border-subtle: rgba(99, 102, 241, 0.08);
+  --border-default: rgba(99, 102, 241, 0.15);
+  --border-strong: rgba(99, 102, 241, 0.3);
+  --border-glow: rgba(99, 102, 241, 0.5);
+
+  --text-bright: #F8FAFF;
+  --text-base: #CBD5E1;
+  --text-muted: #64748B;
+  --text-faint: #334155;
+
+  --accent-50: #EEF2FF;
+  --accent-400: #818CF8;
+  --accent-500: #6366F1;
+  --accent-600: #4F46E5;
+  --accent-glow: rgba(99, 102, 241, 0.4);
+
+  --hot-500: #EC4899;
+  --hot-glow: rgba(236, 72, 153, 0.3);
+
+  --cyan-500: #06B6D4;
+  --cyan-glow: rgba(6, 182, 212, 0.3);
+
+  --success: #10B981;
+  --success-glow: rgba(16, 185, 129, 0.3);
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --danger-glow: rgba(239, 68, 68, 0.3);
+
+  --aurora-1: linear-gradient(135deg, #6366F1 0%, #EC4899 50%, #06B6D4 100%);
+  --aurora-2: linear-gradient(135deg, #818CF8 0%, #C084FC 100%);
+
+  --toast-bg: #0A0E1F;
+  --shadow-strength: 0.4;
+}
+
+/* ============================================
+   LIGHT THEME (Premium Daytime)
+   ============================================ */
+[data-theme="light"] {
+  --bg-void: #FAFBFF;
+  --bg-deep: #FFFFFF;
+  --bg-surface: #F8FAFC;
+  --bg-elevated: #F1F5F9;
+
+  --border-subtle: rgba(99, 102, 241, 0.08);
+  --border-default: rgba(15, 23, 42, 0.08);
+  --border-strong: rgba(15, 23, 42, 0.15);
+  --border-glow: rgba(99, 102, 241, 0.3);
+
+  --text-bright: #0F172A;
+  --text-base: #334155;
+  --text-muted: #64748B;
+  --text-faint: #94A3B8;
+
+  --accent-50: #EEF2FF;
+  --accent-400: #818CF8;
+  --accent-500: #6366F1;
+  --accent-600: #4F46E5;
+  --accent-glow: rgba(99, 102, 241, 0.25);
+
+  --hot-500: #EC4899;
+  --hot-glow: rgba(236, 72, 153, 0.2);
+
+  --cyan-500: #06B6D4;
+  --cyan-glow: rgba(6, 182, 212, 0.2);
+
+  --success: #10B981;
+  --success-glow: rgba(16, 185, 129, 0.2);
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --danger-glow: rgba(239, 68, 68, 0.2);
+
+  --aurora-1: linear-gradient(135deg, #6366F1 0%, #EC4899 50%, #06B6D4 100%);
+  --aurora-2: linear-gradient(135deg, #818CF8 0%, #C084FC 100%);
+
+  --toast-bg: #FFFFFF;
+  --shadow-strength: 0.1;
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Space Grotesk', var(--font-sans);
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 2.75rem;
+  --text-mono-xl: 2.5rem;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  color: var(--text-base);
+  background-color: var(--bg-void);
+  line-height: 1.6;
+  transition: background-color 0.4s ease, color 0.4s ease;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  color: var(--text-bright);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+/* Utility classes */
+.font-display { font-family: var(--font-display); }
+.font-mono { font-family: var(--font-mono); }
+.text-bright { color: var(--text-bright); }
+.text-base-color { color: var(--text-base); }
+.text-muted { color: var(--text-muted); }
+.text-faint { color: var(--text-faint); }
+
+/* Eyebrow label pattern */
+.eyebrow {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+/* ============================================
+   FOCUS STYLES
+   ============================================ */
+:focus-visible {
+  outline: 2px solid var(--accent-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Selection */
+::selection {
+  background: var(--accent-500);
+  color: white;
+}

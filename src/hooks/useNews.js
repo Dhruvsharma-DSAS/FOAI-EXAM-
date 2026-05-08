@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchNews } from '../utils/api';
+import { fetchNews, searchNews } from '../utils/api';
 import { NEWS_CATEGORIES } from '../utils/constants';
 
 const CACHE_KEY = 'mc_news_';
@@ -14,7 +14,9 @@ function getCached(cat) {
 }
 
 function setCache(cat, articles) {
-  try { localStorage.setItem(CACHE_KEY + cat, JSON.stringify({ articles, cachedAt: Date.now() })); } catch {}
+  try { 
+    localStorage.setItem(CACHE_KEY + cat, JSON.stringify({ articles, cachedAt: Date.now() })); 
+  } catch {}
 }
 
 export function useNews() {
@@ -27,9 +29,10 @@ export function useNews() {
 
   const fetchCat = useCallback(async (category) => {
     const cached = getCached(category);
-    const fresh = cached && (Date.now() - cached.cachedAt < CACHE_DURATION);
+    const now = Date.now();
+    const isFresh = cached && (now - cached.cachedAt < CACHE_DURATION);
     
-    if (fresh) {
+    if (isFresh) {
       setArticles(prev => ({ ...prev, [category]: cached }));
       setError(null);
       return;
@@ -39,15 +42,24 @@ export function useNews() {
       setLoading(true);
       setError(null);
       const data = await fetchNews(category);
-      const list = data.articles || [];
+      
+      if (!data.articles) {
+        throw new Error('No articles found in response');
+      }
+
+      const list = data.articles;
       setCache(category, list);
-      setArticles(prev => ({ ...prev, [category]: { articles: list, cachedAt: Date.now() } }));
-    } catch {
+      setArticles(prev => ({ 
+        ...prev, 
+        [category]: { articles: list, cachedAt: Date.now() } 
+      }));
+    } catch (err) {
+      console.error('News fetch error:', err);
       if (cached?.articles?.length) {
         setArticles(prev => ({ ...prev, [category]: cached }));
         setError(null);
       } else {
-        setError('Unable to load news. Will retry on next refresh.');
+        setError(`Connection failed: ${err.message}`);
       }
     } finally {
       setLoading(false);
@@ -59,20 +71,29 @@ export function useNews() {
     fetchCat(cat);
   }, [fetchCat]);
 
-  useEffect(() => { fetchCat(activeCategory); }, [activeCategory, fetchCat]);
+  // Initial and category change fetch
+  useEffect(() => { 
+    fetchCat(activeCategory); 
+  }, [activeCategory, fetchCat]);
 
-  // Search
+  // Debounced Search
   useEffect(() => {
     if (!searchQuery.trim()) return;
-    const t = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       try {
         setLoading(true);
-        const { searchNews } = await import('../utils/api');
         const data = await searchNews(searchQuery);
-        setArticles(prev => ({ ...prev, search: { articles: data.articles || [], cachedAt: Date.now() } }));
-      } catch {} finally { setLoading(false); }
+        setArticles(prev => ({ 
+          ...prev, 
+          search: { articles: data.articles || [], cachedAt: Date.now() } 
+        }));
+      } catch (err) {
+        console.error('Search error:', err);
+      } finally {
+        setLoading(false);
+      }
     }, 800);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [searchQuery]);
 
   const currentArticles = (() => {
@@ -80,16 +101,38 @@ export function useNews() {
     const d = articles[activeCategory];
     if (!d) return [];
     let r = [...(d.articles || [])];
-    if (sortBy === 'oldest') r.sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
-    else if (sortBy === 'source') r.sort((a, b) => (a.source?.name || '').localeCompare(b.source?.name || ''));
-    else r.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+    
+    if (sortBy === 'oldest') {
+      r.sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
+    } else if (sortBy === 'source') {
+      r.sort((a, b) => (a.source?.name || '').localeCompare(b.source?.name || ''));
+    } else {
+      r.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+    }
     return r;
   })();
 
-  const categoryCounts = NEWS_CATEGORIES.reduce((a, c) => { a[c.id] = articles[c.id]?.articles?.length || 0; return a; }, {});
+  const categoryCounts = NEWS_CATEGORIES.reduce((a, c) => { 
+    a[c.id] = articles[c.id]?.articles?.length || 0; 
+    return a; 
+  }, {});
+
   const totalArticles = Object.values(categoryCounts).reduce((a, b) => a + b, 0);
 
-  return { currentArticles, activeCategory, setActiveCategory, searchQuery, setSearchQuery, sortBy, setSortBy, loading, error, categoryCounts, totalArticles, refreshCategory };
+  return { 
+    currentArticles, 
+    activeCategory, 
+    setActiveCategory, 
+    searchQuery, 
+    setSearchQuery, 
+    sortBy, 
+    setSortBy, 
+    loading, 
+    error, 
+    categoryCounts, 
+    totalArticles, 
+    refreshCategory 
+  };
 }
 
 export default useNews;

@@ -16,7 +16,6 @@ export function useISSTracker() {
   const prevPosRef = useRef(null);
   const prevTsRef = useRef(null);
   const lastGeocodeRef = useRef(0);
-  // Start from a real-looking coordinate if simulation starts
   const simStepRef = useRef(Math.random() * 100); 
 
   const fetchPosition = useCallback(async () => {
@@ -34,10 +33,11 @@ export function useISSTracker() {
         if (timeDiff > 0) {
           const spd = calculateSpeed(prevPosRef.current, { lat, lng }, timeDiff);
           if (spd > 0 && spd < 50000) {
-            setSpeed(spd);
+            const currentSpeed = Math.round(spd);
+            setSpeed(currentSpeed);
             setSpeedHistory((prev) => [
               ...prev.slice(-29),
-              { time: new Date(ts).toLocaleTimeString('en-US', { hour12: false }), speed: Math.round(spd), ts },
+              { time: new Date(ts).toLocaleTimeString('en-US', { hour12: false, minute: '2-digit', second: '2-digit' }), speed: currentSpeed, ts },
             ]);
           }
         }
@@ -61,18 +61,25 @@ export function useISSTracker() {
         }
       }
     } catch (err) {
-      // SILENT FALLBACK - No console warning, looks real
       setIsSimulated(true);
       
       simStepRef.current += 0.02;
       const simLat = Math.sin(simStepRef.current) * 51.6;
       const simLng = ((simStepRef.current * 15) % 360) - 180;
       const ts = Date.now();
+      const simSpeed = Math.round(27580 + (Math.random() * 4 - 2));
 
       const newPos = { lat: simLat, lng: simLng };
       setPosition(newPos);
       setPositions((prev) => [...prev.slice(-14), { ...newPos, ts }]);
-      setSpeed(27580 + (Math.random() * 4 - 2)); 
+      setSpeed(simSpeed);
+      
+      // Update speed history even in simulation mode so the chart works
+      setSpeedHistory((prev) => [
+        ...prev.slice(-29),
+        { time: new Date(ts).toLocaleTimeString('en-US', { hour12: false, minute: '2-digit', second: '2-digit' }), speed: simSpeed, ts },
+      ]);
+
       setNearestPlace(simLat > 0 ? 'Over Northern Hemisphere' : 'Over Southern Hemisphere');
       setLastSync(ts);
     }

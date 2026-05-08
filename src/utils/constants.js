@@ -2,7 +2,7 @@
 
 export const ISS_POLL_INTERVAL = 15000; // 15 seconds
 export const GEOCODE_DEBOUNCE = 10000; // 10 seconds
-export const NEWS_CACHE_DURATION = 900000; // 15 minutes
+export const NEWS_CACHE_DURATION = 1800000; // 30 minutes (free tier = 100 req/day)
 export const CHAT_MAX_MESSAGES = 30;
 export const ISS_ALTITUDE_KM = 408;
 export const MAX_TRAJECTORY_POINTS = 15;

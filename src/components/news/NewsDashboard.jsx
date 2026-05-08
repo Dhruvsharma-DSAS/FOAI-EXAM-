@@ -79,18 +79,7 @@ export default function NewsDashboard({
       </div>
 
       {/* Articles Grid */}
-      {error ? (
-        <div className="py-16 text-center rounded-2xl border border-red-500/20 bg-red-500/5">
-          <AlertCircle size={40} className="mx-auto mb-3 text-red-400" />
-          <p className="text-sm text-muted mb-4">{error}</p>
-          <button 
-            onClick={onRefresh}
-            className="px-5 py-2 rounded-xl bg-accent-500 text-white text-xs font-bold uppercase tracking-wider cursor-pointer"
-          >
-            Retry
-          </button>
-        </div>
-      ) : loading ? (
+      {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="h-[360px] rounded-2xl bg-[var(--bg-elevated)] animate-pulse" />

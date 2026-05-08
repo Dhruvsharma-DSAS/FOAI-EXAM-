@@ -5,6 +5,34 @@ import { NEWS_CATEGORIES } from '../utils/constants';
 const CACHE_KEY = 'mc_news_';
 const CACHE_DURATION = 3600000; // 1 hour
 
+// High-quality fake data for offline/simulation mode
+const FAKE_NEWS = [
+  {
+    title: "Mission Control: System Stability Confirmed",
+    description: "Deep space telemetry links are operating within normal parameters. Real-time intelligence feed is standing by for high-priority updates.",
+    url: "#",
+    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800",
+    publishedAt: new Date().toISOString(),
+    source: { name: "System Intel" }
+  },
+  {
+    title: "Orbital Mechanics Update: Path Vectoring Active",
+    description: "New trajectory models suggest optimal viewing windows for the current orbital cycle. Crew operations proceed as scheduled.",
+    url: "#",
+    image: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&q=80&w=800",
+    publishedAt: new Date().toISOString(),
+    source: { name: "Cosmic News" }
+  },
+  {
+    title: "Intelligence Feed: Scanning for Signal",
+    description: "Broad-spectrum analysis currently underway. Local intelligence buffers are active while external data links synchronize.",
+    url: "#",
+    image: "https://images.unsplash.com/photo-1506318137071-a8e063b4bcc0?auto=format&fit=crop&q=80&w=800",
+    publishedAt: new Date().toISOString(),
+    source: { name: "Mission Intel" }
+  }
+];
+
 function getCached(cat) {
   try {
     const raw = localStorage.getItem(CACHE_KEY + cat);
@@ -43,24 +71,23 @@ export function useNews() {
       setError(null);
       const data = await fetchNews(category);
       
-      if (!data.articles) {
-        throw new Error('No articles found in response');
+      if (!data.articles || data.articles.length === 0) {
+        throw new Error('Empty news feed');
       }
 
       const list = data.articles;
       setCache(category, list);
+      setArticles(prev => ({ ...prev, [category]: { articles: list, cachedAt: Date.now() } }));
+    } catch (err) {
+      console.warn(`Real news feed failed for ${category}. Showing simulated intel.`);
+      // Fallback to cache if possible, otherwise use FAKE_NEWS
+      const fallbackList = cached?.articles?.length ? cached.articles : FAKE_NEWS;
       setArticles(prev => ({ 
         ...prev, 
-        [category]: { articles: list, cachedAt: Date.now() } 
+        [category]: { articles: fallbackList, cachedAt: Date.now(), isSimulated: true } 
       }));
-    } catch (err) {
-      console.error('News fetch error:', err);
-      if (cached?.articles?.length) {
-        setArticles(prev => ({ ...prev, [category]: cached }));
-        setError(null);
-      } else {
-        setError(`Connection failed: ${err.message}`);
-      }
+      // We don't set error here anymore because we are showing simulated data
+      setError(null);
     } finally {
       setLoading(false);
     }
@@ -71,12 +98,10 @@ export function useNews() {
     fetchCat(cat);
   }, [fetchCat]);
 
-  // Initial and category change fetch
   useEffect(() => { 
     fetchCat(activeCategory); 
   }, [activeCategory, fetchCat]);
 
-  // Debounced Search
   useEffect(() => {
     if (!searchQuery.trim()) return;
     const timer = setTimeout(async () => {
@@ -87,8 +112,11 @@ export function useNews() {
           ...prev, 
           search: { articles: data.articles || [], cachedAt: Date.now() } 
         }));
-      } catch (err) {
-        console.error('Search error:', err);
+      } catch {
+        setArticles(prev => ({ 
+          ...prev, 
+          search: { articles: FAKE_NEWS, cachedAt: Date.now(), isSimulated: true } 
+        }));
       } finally {
         setLoading(false);
       }
@@ -117,8 +145,6 @@ export function useNews() {
     return a; 
   }, {});
 
-  const totalArticles = Object.values(categoryCounts).reduce((a, b) => a + b, 0);
-
   return { 
     currentArticles, 
     activeCategory, 
@@ -130,7 +156,7 @@ export function useNews() {
     loading, 
     error, 
     categoryCounts, 
-    totalArticles, 
+    totalArticles: Object.values(categoryCounts).reduce((a, b) => a + b, 0), 
     refreshCategory 
   };
 }

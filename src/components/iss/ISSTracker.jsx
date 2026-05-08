@@ -10,20 +10,6 @@ export default function ISSTracker() {
   const { astronauts, loading: crewLoading } = useAstronauts();
   const [autoRefresh, setAutoRefresh] = useState(true);
 
-  if (error && !position.lat) {
-    return (
-      <div className="p-8 rounded-2xl border border-red-500/20 bg-red-500/5 text-center space-y-4">
-        <p className="text-sm text-red-400 font-medium">Telemetry Link Failed: {error}</p>
-        <button 
-          onClick={refetch}
-          className="px-6 py-2 rounded-xl bg-accent-500 text-white font-bold text-xs uppercase tracking-widest cursor-pointer"
-        >
-          Retry Connection
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Section Title */}

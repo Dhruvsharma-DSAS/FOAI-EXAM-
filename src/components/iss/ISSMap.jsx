@@ -11,11 +11,19 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const issIcon = new L.Icon({
-  iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/International_Space_Station.svg/200px-International_Space_Station.svg.png',
-  iconSize: [48, 30],
-  iconAnchor: [24, 15],
-  popupAnchor: [0, -15],
+// Use a reliable red circle marker via SVG data URI
+const issIcon = L.divIcon({
+  className: 'iss-marker',
+  html: `<div style="
+    width: 20px; height: 20px; 
+    background: #EF4444; 
+    border: 3px solid white; 
+    border-radius: 50%; 
+    box-shadow: 0 0 12px rgba(239,68,68,0.6), 0 0 24px rgba(239,68,68,0.3);
+  "></div>`,
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
+  popupAnchor: [0, -12],
 });
 
 function MapRecenter({ center }) {
@@ -46,6 +54,7 @@ export default function ISSMap({ position, positions, nearestPlace }) {
         zoom={3}
         scrollWheelZoom={true}
         zoomControl={true}
+        dragging={true}
         style={{ width: '100%', height: '100%' }}
       >
         <TileLayer 

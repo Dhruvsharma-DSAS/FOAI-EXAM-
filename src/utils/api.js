@@ -1,51 +1,43 @@
-import axios from 'axios';
-
-// Hardcoded for reliable Vercel deployment (no need to set env vars in Vercel dashboard)
 const GNEWS_API_KEY = '2674754d281f5d9fbdba1116453ca4de';
-
-const api = axios.create({
-  timeout: 15000,
-  headers: {
-    'Accept': 'application/json',
-  }
-});
 
 /** ISS position API — HTTPS compatible with fallbacks */
 export async function fetchISSPosition() {
-  try {
-    // Primary: wheretheiss.at (HTTPS)
-    const res = await api.get('https://api.wheretheiss.at/v1/satellites/25544');
-    if (res.data) {
-      return {
-        iss_position: {
-          latitude: String(res.data.latitude),
-          longitude: String(res.data.longitude),
-        },
-        timestamp: Math.floor(res.data.timestamp),
-      };
+  const sources = [
+    'https://api.wheretheiss.at/v1/satellites/25544',
+    'https://api.open-notify.org/iss-now.json' // Note: This might be blocked on HTTPS
+  ];
+
+  for (const url of sources) {
+    try {
+      const res = await fetch(url, { mode: 'cors' });
+      if (res.ok) {
+        const data = await res.json();
+        // Normalize wheretheiss.at format to open-notify format
+        if (data.latitude) {
+          return {
+            iss_position: {
+              latitude: String(data.latitude),
+              longitude: String(data.longitude),
+            },
+            timestamp: Math.floor(data.timestamp),
+          };
+        }
+        return data;
+      }
+    } catch (err) {
+      console.warn(`ISS Source ${url} failed:`, err);
     }
-  } catch (err) {
-    console.error('Primary ISS API failed:', err.message);
   }
-
-  try {
-    // Secondary: open-notify (JSONP or Proxy often needed for HTTPS, but try anyway)
-    const res = await api.get('https://api.open-notify.org/iss-now.json');
-    if (res.data) return res.data;
-  } catch (err) {
-    console.error('Secondary ISS API failed:', err.message);
-  }
-
-  throw new Error('Telemetry connection lost. Please check your internet.');
+  throw new Error('All telemetry sources unavailable');
 }
 
 /** Astronauts API — with hardcoded fallback for stability */
 export async function fetchAstronauts() {
   try {
-    const res = await api.get('https://api.open-notify.org/astros.json');
-    if (res.data) return res.data;
+    const res = await fetch('https://api.open-notify.org/astros.json', { mode: 'cors' });
+    if (res.ok) return await res.json();
   } catch (err) {
-    console.error('Astronaut API fetch failed, using fallback:', err.message);
+    console.warn('Astronaut API failed, using manifest fallback');
   }
   
   return {
@@ -65,17 +57,23 @@ export async function fetchAstronauts() {
 /** Reverse geocoding */
 export async function reverseGeocode(lat, lon) {
   try {
-    const res = await api.get(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`, {
-      headers: { 'User-Agent': 'MissionControlDashboard/1.0' }
-    });
-    return res.data?.address?.country || res.data?.display_name || 'Over open ocean';
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
+      { 
+        mode: 'cors',
+        headers: { 'User-Agent': 'MissionControlDashboard/1.0' } 
+      }
+    );
+    if (!res.ok) return 'Over open ocean';
+    const data = await res.json();
+    return data?.address?.country || data?.display_name || 'Over open ocean';
   } catch {
     return 'Over ocean / remote area';
   }
 }
 
 const CATEGORY_QUERIES = {
-  'breaking-news': 'world news',
+  'breaking-news': 'world events',
   'technology': 'technology',
   'science': 'science',
   'business': 'business',
@@ -87,25 +85,22 @@ export async function fetchNews(category) {
   const query = CATEGORY_QUERIES[category] || category;
   const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=10&apikey=${GNEWS_API_KEY}`;
   
-  try {
-    const res = await api.get(url);
-    if (!res.data || !res.data.articles) {
-      throw new Error('Invalid API response');
-    }
-    return res.data;
-  } catch (err) {
-    if (err.response?.status === 429) {
-      throw new Error('News limit reached (100/day). Try again later.');
-    }
-    throw new Error(err.message || 'Failed to connect to news service');
-  }
+  const res = await fetch(url, { 
+    mode: 'cors',
+    headers: { 'Accept': 'application/json' }
+  });
+  
+  if (!res.ok) throw new Error(`GNews status: ${res.status}`);
+  const data = await res.json();
+  
+  if (!data.articles) throw new Error('No articles in response');
+  return data;
 }
 
 /** GNews search API */
 export async function searchNews(query) {
   const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=10&apikey=${GNEWS_API_KEY}`;
-  const res = await api.get(url);
-  return res.data;
+  const res = await fetch(url, { mode: 'cors' });
+  if (!res.ok) throw new Error('Search failed');
+  return await res.json();
 }
-
-export default api;

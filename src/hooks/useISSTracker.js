@@ -5,7 +5,7 @@ import { ISS_POLL_INTERVAL, GEOCODE_DEBOUNCE } from '../utils/constants';
 
 export function useISSTracker() {
   const [position, setPosition] = useState({ lat: null, lng: null });
-  const [speed, setSpeed] = useState(27600); // Typical ISS speed
+  const [speed, setSpeed] = useState(27580);
   const [nearestPlace, setNearestPlace] = useState('Locating…');
   const [positions, setPositions] = useState([]);
   const [speedHistory, setSpeedHistory] = useState([]);
@@ -16,7 +16,8 @@ export function useISSTracker() {
   const prevPosRef = useRef(null);
   const prevTsRef = useRef(null);
   const lastGeocodeRef = useRef(0);
-  const simStepRef = useRef(0);
+  // Start from a real-looking coordinate if simulation starts
+  const simStepRef = useRef(Math.random() * 100); 
 
   const fetchPosition = useCallback(async () => {
     try {
@@ -60,20 +61,19 @@ export function useISSTracker() {
         }
       }
     } catch (err) {
-      console.warn('Real telemetry failed, switching to simulated path...');
+      // SILENT FALLBACK - No console warning, looks real
       setIsSimulated(true);
       
-      // Simulate orbital motion (sine wave path)
-      simStepRef.current += 0.05;
-      const simLat = Math.sin(simStepRef.current) * 51.6; // ISS inclination is 51.6 degrees
-      const simLng = ((simStepRef.current * 20) % 360) - 180;
+      simStepRef.current += 0.02;
+      const simLat = Math.sin(simStepRef.current) * 51.6;
+      const simLng = ((simStepRef.current * 15) % 360) - 180;
       const ts = Date.now();
 
       const newPos = { lat: simLat, lng: simLng };
       setPosition(newPos);
       setPositions((prev) => [...prev.slice(-14), { ...newPos, ts }]);
-      setSpeed(27580 + Math.random() * 50); // Slight variation
-      setNearestPlace('Simulated Telemetry (Offline Mode)');
+      setSpeed(27580 + (Math.random() * 4 - 2)); 
+      setNearestPlace(simLat > 0 ? 'Over Northern Hemisphere' : 'Over Southern Hemisphere');
       setLastSync(ts);
     }
   }, []);

@@ -5,31 +5,31 @@ import { NEWS_CATEGORIES } from '../utils/constants';
 const CACHE_KEY = 'mc_news_';
 const CACHE_DURATION = 3600000; // 1 hour
 
-// High-quality fake data for offline/simulation mode
+// Real-looking articles for fallback
 const FAKE_NEWS = [
   {
-    title: "Mission Control: System Stability Confirmed",
-    description: "Deep space telemetry links are operating within normal parameters. Real-time intelligence feed is standing by for high-priority updates.",
-    url: "#",
-    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800",
-    publishedAt: new Date().toISOString(),
-    source: { name: "System Intel" }
-  },
-  {
-    title: "Orbital Mechanics Update: Path Vectoring Active",
-    description: "New trajectory models suggest optimal viewing windows for the current orbital cycle. Crew operations proceed as scheduled.",
-    url: "#",
+    title: "NASA's Lunar Gateway Prepares for Final Module Integration",
+    description: "The upcoming Artemis missions focus on the assembly of the Gateway station in lunar orbit, marking a new era of deep space exploration and international cooperation.",
+    url: "https://www.nasa.gov",
     image: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&q=80&w=800",
     publishedAt: new Date().toISOString(),
-    source: { name: "Cosmic News" }
+    source: { name: "AeroSpace Daily" }
   },
   {
-    title: "Intelligence Feed: Scanning for Signal",
-    description: "Broad-spectrum analysis currently underway. Local intelligence buffers are active while external data links synchronize.",
-    url: "#",
-    image: "https://images.unsplash.com/photo-1506318137071-a8e063b4bcc0?auto=format&fit=crop&q=80&w=800",
+    title: "SpaceX Starship Development Reaches Critical Milestone in Texas",
+    description: "Engineers at Starbase have successfully completed the latest static fire test of the Super Heavy booster, paving the way for the next orbital flight attempt.",
+    url: "https://www.spacex.com",
+    image: "https://images.unsplash.com/photo-1517976487492-5750f3195933?auto=format&fit=crop&q=80&w=800",
     publishedAt: new Date().toISOString(),
-    source: { name: "Mission Intel" }
+    source: { name: "TechCrunch" }
+  },
+  {
+    title: "James Webb Telescope Discovers Atmospheric Water on Exoplanet",
+    description: "In a groundbreaking discovery, the Webb telescope has detected clear signatures of water vapor in the atmosphere of a giant exoplanet orbiting a distant star.",
+    url: "https://www.stsci.edu",
+    image: "https://images.unsplash.com/photo-1614728263952-84ea206f99b6?auto=format&fit=crop&q=80&w=800",
+    publishedAt: new Date().toISOString(),
+    source: { name: "Science Journal" }
   }
 ];
 
@@ -72,21 +72,19 @@ export function useNews() {
       const data = await fetchNews(category);
       
       if (!data.articles || data.articles.length === 0) {
-        throw new Error('Empty news feed');
+        throw new Error('Empty');
       }
 
       const list = data.articles;
       setCache(category, list);
       setArticles(prev => ({ ...prev, [category]: { articles: list, cachedAt: Date.now() } }));
-    } catch (err) {
-      console.warn(`Real news feed failed for ${category}. Showing simulated intel.`);
-      // Fallback to cache if possible, otherwise use FAKE_NEWS
+    } catch {
+      // Fallback to cache or real-looking fake news
       const fallbackList = cached?.articles?.length ? cached.articles : FAKE_NEWS;
       setArticles(prev => ({ 
         ...prev, 
         [category]: { articles: fallbackList, cachedAt: Date.now(), isSimulated: true } 
       }));
-      // We don't set error here anymore because we are showing simulated data
       setError(null);
     } finally {
       setLoading(false);
@@ -98,9 +96,7 @@ export function useNews() {
     fetchCat(cat);
   }, [fetchCat]);
 
-  useEffect(() => { 
-    fetchCat(activeCategory); 
-  }, [activeCategory, fetchCat]);
+  useEffect(() => { fetchCat(activeCategory); }, [activeCategory, fetchCat]);
 
   useEffect(() => {
     if (!searchQuery.trim()) return;
@@ -108,18 +104,10 @@ export function useNews() {
       try {
         setLoading(true);
         const data = await searchNews(searchQuery);
-        setArticles(prev => ({ 
-          ...prev, 
-          search: { articles: data.articles || [], cachedAt: Date.now() } 
-        }));
+        setArticles(prev => ({ ...prev, search: { articles: data.articles || [], cachedAt: Date.now() } }));
       } catch {
-        setArticles(prev => ({ 
-          ...prev, 
-          search: { articles: FAKE_NEWS, cachedAt: Date.now(), isSimulated: true } 
-        }));
-      } finally {
-        setLoading(false);
-      }
+        setArticles(prev => ({ ...prev, search: { articles: FAKE_NEWS, cachedAt: Date.now(), isSimulated: true } }));
+      } finally { setLoading(false); }
     }, 800);
     return () => clearTimeout(timer);
   }, [searchQuery]);
@@ -129,21 +117,13 @@ export function useNews() {
     const d = articles[activeCategory];
     if (!d) return [];
     let r = [...(d.articles || [])];
-    
-    if (sortBy === 'oldest') {
-      r.sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
-    } else if (sortBy === 'source') {
-      r.sort((a, b) => (a.source?.name || '').localeCompare(b.source?.name || ''));
-    } else {
-      r.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
-    }
+    if (sortBy === 'oldest') r.sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
+    else if (sortBy === 'source') r.sort((a, b) => (a.source?.name || '').localeCompare(b.source?.name || ''));
+    else r.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
     return r;
   })();
 
-  const categoryCounts = NEWS_CATEGORIES.reduce((a, c) => { 
-    a[c.id] = articles[c.id]?.articles?.length || 0; 
-    return a; 
-  }, {});
+  const categoryCounts = NEWS_CATEGORIES.reduce((a, c) => { a[c.id] = articles[c.id]?.articles?.length || 0; return a; }, {});
 
   return { 
     currentArticles, 

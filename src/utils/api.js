@@ -1,4 +1,4 @@
-const GNEWS_API_KEY = '2674754d281f5d9fbdba1116453ca4de';
+const GNEWS_API_KEY = import.meta.env.VITE_GNEWS_API_KEY;
 
 /** ISS position API — HTTPS compatible with fallbacks */
 export async function fetchISSPosition() {

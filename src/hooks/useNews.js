@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchNews, searchNews } from '../utils/api';
-import { NEWS_CATEGORIES } from '../utils/constants';
+import { NEWS_CATEGORIES, NEWS_CACHE_DURATION } from '../utils/constants';
 
 const CACHE_KEY = 'mc_news_';
-const CACHE_DURATION = 3600000; // 1 hour
+const CACHE_DURATION = NEWS_CACHE_DURATION;
 
 // Real-looking articles for fallback
 const FAKE_NEWS = [

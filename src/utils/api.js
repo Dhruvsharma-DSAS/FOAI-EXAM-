@@ -4,7 +4,7 @@ const GNEWS_API_KEY = '2674754d281f5d9fbdba1116453ca4de';
 export async function fetchISSPosition() {
   const sources = [
     'https://api.wheretheiss.at/v1/satellites/25544',
-    'https://api.open-notify.org/iss-now.json' // Note: This might be blocked on HTTPS
+    'https://api.open-notify.org/iss-now.json'
   ];
 
   for (const url of sources) {
@@ -12,7 +12,6 @@ export async function fetchISSPosition() {
       const res = await fetch(url, { mode: 'cors' });
       if (res.ok) {
         const data = await res.json();
-        // Normalize wheretheiss.at format to open-notify format
         if (data.latitude) {
           return {
             iss_position: {
@@ -72,8 +71,9 @@ export async function reverseGeocode(lat, lon) {
   }
 }
 
+// Updated mapping to use 'space' for Breaking News as requested by user
 const CATEGORY_QUERIES = {
-  'breaking-news': 'world events',
+  'breaking-news': 'space',
   'technology': 'technology',
   'science': 'science',
   'business': 'business',
@@ -83,6 +83,7 @@ const CATEGORY_QUERIES = {
 /** GNews API — uses SEARCH endpoint (works on free plan) */
 export async function fetchNews(category) {
   const query = CATEGORY_QUERIES[category] || category;
+  // Match the exact working format: search?q=...&lang=en&max=10&apikey=...
   const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=10&apikey=${GNEWS_API_KEY}`;
   
   const res = await fetch(url, { 

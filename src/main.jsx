@@ -7,12 +7,15 @@ import './styles/leaflet-overrides.css'
 import { ThemeProvider } from './context/ThemeContext'
 import { DashboardProvider } from './context/DashboardContext'
 import { Toaster } from 'react-hot-toast'
+import ErrorBoundary from './components/ui/ErrorBoundary'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ThemeProvider>
       <DashboardProvider>
-        <App />
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
         <Toaster position="bottom-left" />
       </DashboardProvider>
     </ThemeProvider>

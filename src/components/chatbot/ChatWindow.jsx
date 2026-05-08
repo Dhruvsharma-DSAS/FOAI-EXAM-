@@ -26,7 +26,8 @@ export default function ChatWindow({ isOpen, onClose, messages, onSend, isTyping
           className="fixed bottom-24 right-6 w-[400px] max-w-[calc(100vw-48px)] h-[600px] max-h-[calc(100vh-120px)] flex flex-col rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-deep)] shadow-2xl z-[100] overflow-hidden backdrop-blur-2xl"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)] bg-[rgba(from var(--bg-surface) r g b / 0.5)]">
+          <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]"
+            style={{ background: 'var(--bg-surface)', opacity: 0.9 }}>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-accent-500 to-hot-500 flex items-center justify-center text-white">
                 <Sparkles size={16} />

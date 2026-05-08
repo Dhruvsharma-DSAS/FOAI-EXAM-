@@ -21,10 +21,10 @@ export function useISSTracker() {
       const data = await fetchISSPosition();
       const lat = parseFloat(data.iss_position.latitude);
       const lng = parseFloat(data.iss_position.longitude);
-      const ts = data.timestamp * 1000;
+      const ts = data.timestamp ? data.timestamp * 1000 : Date.now();
 
       // Calculate speed if we have a previous position
-      if (prevPosRef.current && prevTsRef.current) {
+      if (prevPosRef.current && prevTsRef.current && ts) {
         const timeDiff = (ts - prevTsRef.current) / 1000;
         if (timeDiff > 0) {
           const spd = calculateSpeed(prevPosRef.current, { lat, lng }, timeDiff);

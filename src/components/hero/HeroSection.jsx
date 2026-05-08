@@ -1,86 +1,60 @@
 import { motion } from 'framer-motion';
-import { formatNumber, formatRelativeTime } from '../../utils/formatters';
+import LiveBadge from '../ui/LiveBadge';
+import { useCountUp } from '../../hooks/useCountUp';
 
 export default function HeroSection({ altitude, speed, lastSync }) {
+  const displayAltitude = useCountUp(altitude || 408, 2);
+  const displaySpeed = useCountUp(speed || 27580);
+
   return (
-    <section className="relative py-16 md:py-20 text-center overflow-hidden">
-      {/* Background radial glow */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.08) 0%, transparent 70%)',
-        }}
-      />
+    <div className="relative pt-12 pb-8 overflow-hidden">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col items-center text-center space-y-4"
+      >
+        <LiveBadge />
+        
+        <div className="space-y-2">
+          <h2 className="eyebrow tracking-[0.3em] text-accent-500">ORBITAL POSITIONING SYSTEM</h2>
+          <h1 className="text-4xl md:text-6xl font-black font-display text-bright tracking-tight">
+            ISS Mission Control
+          </h1>
+        </div>
 
-      <div className="relative z-10 max-w-3xl mx-auto px-6">
-        {/* Eyebrow */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="flex items-center justify-center gap-2 mb-6"
-        >
-          <div className="relative w-2 h-2">
-            <div className="absolute inset-0 rounded-full" style={{ background: 'var(--success)' }} />
-            <div className="absolute inset-0 rounded-full" style={{
-              background: 'var(--success)',
-              animation: 'liveDot 1.4s ease-out infinite',
-            }} />
+        <p className="text-muted max-w-2xl text-sm md:text-base leading-relaxed">
+          Monitoring the International Space Station's real-time trajectory, 
+          orbital velocity telemetry, and global scientific intelligence feed.
+        </p>
+
+        <div className="flex flex-wrap justify-center gap-12 pt-8">
+          <div className="text-center">
+            <p className="eyebrow mb-1">ALTITUDE</p>
+            <p className="text-3xl font-mono font-bold text-bright">
+              {displayAltitude}<span className="text-sm font-normal text-muted ml-1">KM</span>
+            </p>
           </div>
-          <span className="eyebrow" style={{ color: 'var(--success)' }}>TRACKING NOW</span>
-        </motion.div>
+          <div className="w-px h-12 bg-[var(--border-subtle)] hidden md:block" />
+          <div className="text-center">
+            <p className="eyebrow mb-1">VELOCITY</p>
+            <p className="text-3xl font-mono font-bold text-bright">
+              {displaySpeed.toLocaleString()}<span className="text-sm font-normal text-muted ml-1">KM/H</span>
+            </p>
+          </div>
+          <div className="w-px h-12 bg-[var(--border-subtle)] hidden md:block" />
+          <div className="text-center">
+            <p className="eyebrow mb-1">STATUS</p>
+            <p className="text-sm font-bold text-success mt-2 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+              NOMINAL ORBIT
+            </p>
+          </div>
+        </div>
+      </motion.div>
 
-        {/* Headline */}
-        <motion.h2
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-xl md:text-2xl mb-2"
-          style={{ fontFamily: 'var(--font-display)', color: 'var(--text-muted)', fontWeight: 500 }}
-        >
-          The International Space Station is currently
-        </motion.h2>
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="mb-4"
-        >
-          <span
-            className="font-mono font-bold"
-            style={{
-              fontSize: 'clamp(2rem, 5vw, 2.75rem)',
-              color: 'var(--text-bright)',
-              letterSpacing: '-0.02em',
-            }}
-          >
-            {formatNumber(altitude || 408)}
-          </span>
-          <span className="text-xl md:text-2xl ml-2" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>
-            km above Earth
-          </span>
-        </motion.div>
-
-        {/* Subtext */}
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="text-sm md:text-base"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          Orbiting at {formatNumber(speed || 27580)} km/h · Last sync {lastSync ? formatRelativeTime(lastSync) : '—'}
-        </motion.p>
-
-        {/* Aurora accent line */}
-        <motion.div
-          initial={{ opacity: 0, scaleX: 0 }}
-          animate={{ opacity: 1, scaleX: 1 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="mx-auto mt-8 h-px w-16"
-          style={{ background: 'linear-gradient(90deg, var(--accent-500), var(--hot-500), var(--cyan-500))' }}
-        />
-      </div>
-    </section>
+      {/* Decorative HUD Elements */}
+      <div className="absolute top-0 left-0 w-32 h-32 border-t-2 border-l-2 border-accent-500/20 rounded-tl-3xl -z-10" />
+      <div className="absolute top-0 right-0 w-32 h-32 border-t-2 border-r-2 border-accent-500/20 rounded-tr-3xl -z-10" />
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './components/layout/Header';
 import AmbientBackground from './components/layout/AmbientBackground';
 import ISSTracker from './components/iss/ISSTracker';
@@ -16,12 +16,9 @@ import toast from 'react-hot-toast';
 
 function App() {
   const { theme, toggleTheme } = useTheme();
+  const { position, speed, nearestPlace, positions, speedHistory, lastSync } = useISSTracker();
+  const { astronauts, loading: crewLoading } = useAstronauts();
   
-  // ISS State (for chatbot context)
-  const { position, speed, nearestPlace, positions } = useISSTracker();
-  const { astronauts } = useAstronauts();
-  
-  // News State
   const { 
     currentArticles, 
     activeCategory, 
@@ -37,30 +34,14 @@ function App() {
     refreshCategory
   } = useNews();
 
-  // Chatbot State
   const [isChatOpen, setIsChatOpen] = useState(false);
   const { messages, isTyping, sendMessage, clearHistory } = useChatbot();
 
-  // Keyboard Shortcuts
   useKeyboardShortcuts([
     { key: 'k', meta: true, action: () => document.querySelector('input[type="text"]')?.focus() },
     { key: 'j', meta: true, action: () => setIsChatOpen(prev => !prev) },
     { key: 'd', meta: true, action: toggleTheme },
   ]);
-
-  // Toast on updates
-  useEffect(() => {
-    if (positions.length > 0 && positions.length % 5 === 0) {
-      toast.success('ISS position locked', {
-        icon: '🛰️',
-        style: {
-          background: 'var(--bg-deep)',
-          color: 'var(--text-bright)',
-          border: '1px solid var(--border-default)',
-        },
-      });
-    }
-  }, [positions.length]);
 
   const handleSendMessage = (text) => {
     const context = buildContext(
@@ -71,50 +52,49 @@ function App() {
   };
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen pb-20">
       <AmbientBackground />
       <Header />
       
-      <main className="relative z-10 max-w-[1600px] mx-auto px-6 pt-6">
-        {/* ISS Section */}
-        <ISSTracker />
+      <main className="relative z-10 max-w-[1440px] mx-auto px-6 space-y-12 mt-8">
+        {/* Section 1: ISS Live Tracker & Hero */}
+        <section className="space-y-8">
+          <ISSTracker />
+        </section>
 
-        {/* Integration of Pie Chart in the ISS layout gap */}
-        <div className="hidden xl:block absolute top-[1100px] right-6 w-[calc(100%*7/12-24px)] h-[400px]">
-          {/* Note: In a real app we'd use a more robust layout, but for this portfolio piece we'll place it precisely */}
-        </div>
+        {/* Section 2: News Intelligence Center */}
+        <section className="pt-12 border-t border-[var(--border-subtle)]">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* News Feed - Main Area */}
+            <div className="lg:col-span-8">
+              <NewsDashboard 
+                articles={currentArticles}
+                activeCategory={activeCategory}
+                onCategoryChange={setActiveCategory}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+                loading={newsLoading}
+                error={newsError}
+                categoryCounts={categoryCounts}
+                onRefresh={() => refreshCategory(activeCategory)}
+              />
+            </div>
 
-        {/* News Dashboard */}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mt-12">
-          <div className="xl:col-span-12">
-             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-                <div className="xl:col-span-8 order-2 xl:order-1">
-                  <NewsDashboard 
-                    articles={currentArticles}
-                    activeCategory={activeCategory}
-                    onCategoryChange={setActiveCategory}
-                    searchQuery={searchQuery}
-                    onSearchChange={setSearchQuery}
-                    sortBy={sortBy}
-                    onSortChange={setSortBy}
-                    loading={newsLoading}
-                    error={newsError}
-                    categoryCounts={categoryCounts}
-                    onRefresh={() => refreshCategory(activeCategory)}
-                  />
-                </div>
-                <div className="xl:col-span-4 order-1 xl:order-2 mt-20">
-                  <NewsDistribution 
-                    categoryCounts={categoryCounts} 
-                    totalArticles={totalArticles} 
-                  />
-                </div>
-             </div>
+            {/* Sidebar Stats & Charts */}
+            <div className="lg:col-span-4 space-y-8 pt-24 lg:pt-32">
+              <NewsDistribution 
+                categoryCounts={categoryCounts} 
+                totalArticles={totalArticles} 
+              />
+              {/* Other sidebar widgets can go here */}
+            </div>
           </div>
-        </div>
+        </section>
       </main>
 
-      {/* Chatbot */}
+      {/* Floating Elements */}
       <ChatbotFAB 
         onClick={() => setIsChatOpen(!isChatOpen)} 
         isOpen={isChatOpen}

@@ -2,7 +2,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useTheme } from '../../context/ThemeContext';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -11,7 +11,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Use a reliable red circle marker via SVG data URI
+// Red glowing dot marker
 const issIcon = L.divIcon({
   className: 'iss-marker',
   html: `<div style="
@@ -26,17 +26,22 @@ const issIcon = L.divIcon({
   popupAnchor: [0, -12],
 });
 
-function MapRecenter({ center }) {
+// Only center the map ONCE on first valid position
+function InitialCenter({ center }) {
   const map = useMap();
+  const hasCentered = useRef(false);
+  
   useEffect(() => {
-    if (center && center[0] !== 0) {
-      map.flyTo(center, map.getZoom(), { animate: true, duration: 2 });
+    if (!hasCentered.current && center[0] !== 0 && center[0] !== 20) {
+      map.flyTo(center, 4, { animate: true, duration: 1.5 });
+      hasCentered.current = true;
     }
   }, [center, map]);
+  
   return null;
 }
 
-export default function ISSMap({ position, positions, nearestPlace }) {
+export default function ISSMap({ position, positions, nearestPlace, onRecenter }) {
   const { theme } = useTheme();
   const center = position.lat ? [position.lat, position.lng] : [20, 0];
   
@@ -62,6 +67,7 @@ export default function ISSMap({ position, positions, nearestPlace }) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
         />
         
+        {/* Trajectory trail */}
         {positions.length > 1 && (
           <Polyline
             positions={positions.map(p => [p.lat, p.lng])}
@@ -69,6 +75,7 @@ export default function ISSMap({ position, positions, nearestPlace }) {
           />
         )}
 
+        {/* ISS Marker — clickable popup, map freely pannable */}
         {position.lat && (
           <>
             <Marker position={[position.lat, position.lng]} icon={issIcon}>
@@ -85,7 +92,7 @@ export default function ISSMap({ position, positions, nearestPlace }) {
                 </div>
               </Popup>
             </Marker>
-            <MapRecenter center={[position.lat, position.lng]} />
+            <InitialCenter center={[position.lat, position.lng]} />
           </>
         )}
       </MapContainer>
